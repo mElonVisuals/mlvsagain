@@ -28,9 +28,6 @@ const client = new Client({
 // Create DisTube instance
 client.distube = new DisTube(client, {
     emitNewSongOnly: true,
-    leaveOnFinish: false,
-    leaveOnStop: false,
-    leaveOnEmpty: false,
     emptyCooldown: 60,
     plugins: [new SpotifyPlugin(), new SoundCloudPlugin()]
 });
@@ -154,4 +151,3 @@ client.on('messageCreate', async message => {
 // --- Login to Discord and start the Express server ---
 client.login(config.token);
 app.listen(PORT);
-
