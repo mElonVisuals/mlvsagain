@@ -1,14 +1,12 @@
 // C:\Users\hopsi\Desktop\mlvsagain\commands\music\play.js
 
-// Import necessary classes from discord.js and the voice package
+// Import necessary classes from discord.js
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 // We are no longer using the createButton utility function to avoid potential emoji issues.
 // Instead, we will build all buttons directly using ButtonBuilder for consistency and reliability.
 const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 const config = require('../../config.json');
 
-// This is the core function to connect to a voice channel
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, NoSubscriberBehavior } = require('@discordjs/voice');
 // You will need a library to handle music playback, like discord-player or distube.
 // This example assumes you will integrate one of them.
 
@@ -62,25 +60,8 @@ module.exports = {
                 footerText: 'Advanced Music System'
             });
 
-            const controlRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('music_queue')
-                    .setLabel('View Queue')
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji('📋'),
-                new ButtonBuilder()
-                    .setCustomId('music_help')
-                    .setLabel('More Help')
-                    .setStyle(ButtonStyle.Secondary)
-                    .setEmoji('❓'),
-                new ButtonBuilder()
-                    .setLabel('Music Guide')
-                    .setStyle(ButtonStyle.Link)
-                    .setURL('https://mlvs.me/music')
-                    .setEmoji('🎶')
-            );
-
-            return message.reply({ embeds: [usageEmbed], components: [controlRow] });
+            // The user requested to remove the buttons, so we will not include them here.
+            return message.reply({ embeds: [usageEmbed] });
         }
 
         // --- STEP 2: USE DISTUBE TO PLAY MUSIC ---
@@ -110,7 +91,7 @@ module.exports = {
                 member: message.member,
             });
 
-            // We will now handle the "now playing" message and buttons via a DisTube event listener
+            // We will now handle the "now playing" message via a DisTube event listener
             // in the main bot file. This command will just handle the initial request.
             await loadingMsg.delete();
         } catch (error) {
