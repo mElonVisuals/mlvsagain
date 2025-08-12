@@ -4,7 +4,7 @@ const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 
 module.exports = {
     name: 'add',
-    description: 'Adds a song to the end of the queue without playing it immediately.',
+    description: 'Adds a song to the end of the queue. If no music is playing, it will start a new queue.',
     category: 'music',
     usage: '!add <song name/URL>',
     cooldown: 3,
@@ -32,26 +32,20 @@ module.exports = {
             return message.reply({ embeds: [usageEmbed] });
         }
 
-        const queue = client.distube.getQueue(message);
-        if (!queue) {
-            const errorEmbed = createGlassEmbed({
-                title: '❌ No Music Playing',
-                description: '```diff\n- There is no active queue. Please use the !play command instead!\n```',
-                color: '#FF6B6B',
-                client: client
-            });
-            return message.reply({ embeds: [errorEmbed] });
-        }
-
+        // The distube.play() method automatically handles adding a song to a queue
+        // or starting a new queue if none exists.
+        // This removes the need for a separate !add and !play command in most cases,
+        // making the bot more user-friendly.
         try {
-            await client.distube.add(message, query);
-            const successEmbed = createGlassEmbed({
-                title: '➕ Added to Queue',
-                description: `**[${query}]** has been added to the queue!`,
-                color: '#00FF87',
-                client: client
+            await client.distube.play(voiceChannel, query, {
+                textChannel: message.channel,
+                member: message.member
             });
-            message.reply({ embeds: [successEmbed] });
+
+            // The 'addSong' or 'playSong' event listeners in index.js will handle
+            // sending the confirmation message to the user, so we don't need to
+            // send a message here. This avoids duplicate messages.
+            message.react('✅');
         } catch (e) {
             console.error('Error adding music:', e);
             const errorEmbed = createGlassEmbed({
