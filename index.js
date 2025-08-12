@@ -1,9 +1,9 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
 // Assuming you have this utility function in ./utils/glassEmbedBuilder.js
-const { createGlassEmbed } = require('./utils/glassEmbedBuilder'); 
+const { createGlassEmbed } = require('./utils/glassEmbedBuilder');
 const { handleInteraction } = require('./handlers/interactionHandler');
 require('dotenv').config();
 
@@ -122,7 +122,21 @@ const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'
 for (const file of eventFiles) {
     const event = require(`./events/${file}`);
     if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client));
+        // We added the status presence code here, inside the 'ready' event.
+        // It runs once when the bot successfully logs in.
+        client.once(event.name, (...args) => {
+            if (event.name === 'ready') {
+                console.log(`Bot is ready and logged in as ${client.user.tag}!`);
+                client.user.setPresence({
+                    activities: [{
+                        name: 'music commands',
+                        type: ActivityType.Listening
+                    }],
+                    status: 'online'
+                });
+            }
+            event.execute(...args, client);
+        });
     } else {
         client.on(event.name, (...args) => event.execute(...args, client));
     }

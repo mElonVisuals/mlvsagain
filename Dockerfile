@@ -6,8 +6,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install Python, FFmpeg, and other build tools required by some npm packages.
-# The --no-cache flag keeps the image size small.
-RUN apk add --no-cache python3 make g++ ffmpeg
+# We now install the full ffmpeg-dev package and ffprobe for better compatibility.
+RUN apk add --no-cache python3 make g++ ffmpeg-dev ffprobe
 
 # Copy package.json and package-lock.json to install dependencies
 # We copy them first to leverage Docker's layer caching
