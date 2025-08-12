@@ -28,7 +28,6 @@ const client = new Client({
 // Create DisTube instance
 client.distube = new DisTube(client, {
     emitNewSongOnly: true,
-    emptyCooldown: 60,
     plugins: [new SpotifyPlugin(), new SoundCloudPlugin()]
 });
 
