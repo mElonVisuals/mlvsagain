@@ -8,18 +8,16 @@ const { handleInteraction } = require('./handlers/interactionHandler');
 require('dotenv').config();
 
 // --- Music Library Imports ---
-// We need to import the core Distube class and the plugins you'll use.
+// We need to import the core DisTube class and the plugins you'll use.
 const { DisTube } = require('distube');
 const { SoundCloudPlugin } = require('@distube/soundcloud');
 const { SpotifyPlugin } = require('@distube/spotify');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 
-// We need to import the path to the ffmpeg executable provided by ffmpeg-static.
-const ffmpegPath = require('ffmpeg-static');
-
-// We now import the correct yt-dlp executable path from the new package.
-// This is a more reliable method than relying on a system-wide installation.
-const ytdl_bin = require('yt-dlp-exec').executablePath;
+// We are no longer using ffmpeg-static or yt-dlp-exec.
+// The Dockerfile now installs these directly on the system path.
+// const ffmpegPath = require('ffmpeg-static');
+// const ytdl_bin = require('yt-dlp-exec').executablePath;
 
 // Initialize Discord Client
 const client = new Client({
@@ -36,9 +34,9 @@ const client = new Client({
 // This is the crucial part. It creates the DisTube client and attaches it
 // to your main bot client, so it can be accessed from any command file.
 client.distube = new DisTube(client, {
-    // We've added the ffmpeg path here to ensure DisTube can find the executable
-    // on your system, regardless of your PATH environment variable.
-    ffmpeg: ffmpegPath,
+    // We now use the simple string 'ffmpeg' to tell DisTube to find the executable
+    // in the container's system PATH, where our Dockerfile installs it.
+    ffmpeg: 'ffmpeg',
     
     emitNewSongOnly: false,
     emitAddSongWhenCreatingQueue: false,
@@ -47,8 +45,9 @@ client.distube = new DisTube(client, {
     plugins: [
         new SoundCloudPlugin(),
         new SpotifyPlugin(),
-        // We configure YtDlpPlugin to use the locally installed `ytdl_bin` executable path.
-        new YtDlpPlugin({ executable: ytdl_bin }),
+        // We no longer need to specify an executable path for YtDlpPlugin.
+        // It will now find the system-installed yt-dlp.
+        new YtDlpPlugin(),
     ],
 });
 

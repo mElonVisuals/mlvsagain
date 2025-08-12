@@ -1,6 +1,7 @@
 # Dependency directories
 # The 'node_modules' folder contains all your installed packages
 # and should never be committed to Git.
+node_modules/
 
 # Environment variables
 # This file contains your Discord bot token and other sensitive keys.

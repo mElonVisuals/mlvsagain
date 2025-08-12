@@ -9,6 +9,10 @@ WORKDIR /app
 # We are now installing the standard 'ffmpeg' package which includes 'ffprobe'.
 RUN apk add --no-cache python3 make g++ ffmpeg
 
+# Create a symbolic link to ensure the ffmpeg executable is in a standard path.
+# This is a robust way to ensure DisTube can find it, resolving the FFMPEG_NOT_INSTALLED error.
+RUN ln -s /usr/bin/ffmpeg /usr/local/bin/ffmpeg
+
 # Copy package.json and package-lock.json to install dependencies
 # We copy them first to leverage Docker's layer caching
 COPY package*.json ./
