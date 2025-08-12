@@ -5,13 +5,11 @@ FROM node:20-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install Python, FFmpeg, and other build tools required by some npm packages.
-# We are now installing the standard 'ffmpeg' package which includes 'ffprobe'.
-RUN apk add --no-cache python3 make g++ ffmpeg
-
-# Create a symbolic link to ensure the ffmpeg executable is in a standard path.
-# This is a robust way to ensure DisTube can find it, resolving the FFMPEG_NOT_INSTALLED error.
-RUN ln -s /usr/bin/ffmpeg /usr/local/bin/ffmpeg
+# Install Python3, FFmpeg, and yt-dlp.
+# This is the most reliable way to ensure DisTube finds the binaries.
+# It also installs other build tools required by some npm packages.
+RUN apk add --no-cache python3 py3-pip make g++ ffmpeg && \
+    pip install yt-dlp
 
 # Copy package.json and package-lock.json to install dependencies
 # We copy them first to leverage Docker's layer caching
