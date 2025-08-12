@@ -5,6 +5,10 @@ FROM node:18-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install Python and other build tools required by some npm packages.
+# The --no-cache flag keeps the image size small.
+RUN apk add --no-cache python3 make g++
+
 # Copy package.json and package-lock.json (or pnpm-lock.yaml) to install dependencies
 COPY package*.json ./
 
