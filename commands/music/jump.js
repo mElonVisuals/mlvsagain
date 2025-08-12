@@ -5,6 +5,7 @@ const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 module.exports = {
     name: 'jump',
     description: 'Jumps to a specific song in the queue.',
+    category: 'music',
     async execute(message, args, client) {
         const queue = client.distube.getQueue(message);
         if (!queue) {

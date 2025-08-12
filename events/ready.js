@@ -1,3 +1,4 @@
+const { ActivityType } = require('discord.js');
 const config = require('../config.json');
 
 module.exports = {
@@ -5,9 +6,15 @@ module.exports = {
     once: true,
     execute(client) {
         console.log(`🚀 ${client.user.tag} is now online!`);
-        console.log(`📊 Serving ${client.guilds.cache.size} servers and ${client.users.cache.size} users`);
+        console.log(`📊 Serving ${client.guilds.cache.size} servers`);
         
-        // Set bot activity
-        client.user.setActivity(`${config.prefix}help | MLVS.me`, { type: 'WATCHING' });
+        // Use the setPresence method to correctly set bot activity.
+        client.user.setPresence({
+            activities: [{
+                name: `${config.prefix}help | MLVS.me`,
+                type: ActivityType.Watching
+            }],
+            status: 'online'
+        });
     },
 };

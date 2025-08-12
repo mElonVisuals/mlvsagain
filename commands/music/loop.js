@@ -5,6 +5,7 @@ const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 module.exports = {
     name: 'loop',
     description: 'Loops the current song, the queue, or turns looping off.',
+    category: 'music',
     async execute(message, args, client) {
         // Get the queue for the guild
         const queue = client.distube.getQueue(message);

@@ -5,6 +5,7 @@ const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 module.exports = {
     name: 'shuffle',
     description: 'Shuffles the queue.',
+    category: 'music',
     async execute(message, args, client) {
         const queue = client.distube.getQueue(message);
         if (!queue) {
