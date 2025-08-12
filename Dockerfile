@@ -1,6 +1,6 @@
-# Use a lightweight Node.js image as the base
-# This is the "build" stage
-FROM node:18-alpine AS builder
+# Use Node.js 20 Alpine as the base image for the build stage.
+# This resolves dependency compatibility issues.
+FROM node:20-alpine AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -9,28 +9,26 @@ WORKDIR /app
 # The --no-cache flag keeps the image size small.
 RUN apk add --no-cache python3 make g++
 
-# Copy package.json and package-lock.json (or pnpm-lock.yaml) to install dependencies
+# Copy package.json and package-lock.json to install dependencies
+# We copy them first to leverage Docker's layer caching
 COPY package*.json ./
 
-# Install the dependencies
-RUN npm install
+# Install the dependencies. We use 'npm ci' for clean, repeatable builds.
+# It requires a package-lock.json file to be present.
+RUN npm ci
 
 # Copy the rest of your application code
 COPY . .
 
-# Expose the port your bot will run on.
-# Discord bots don't always need a port, but if your bot has an API or web server,
-# you'll need to specify it here. Replace 3000 with your bot's port if needed.
-# For a typical bot, you might not need EXPOSE.
-# EXPOSE 3000
-
 # The "production" stage
-FROM node:18-alpine
+# Use a fresh, clean Node.js 20 Alpine image for the final, production-ready container
+FROM node:20-alpine
 
+# Set the working directory
 WORKDIR /app
 
 # Copy only the necessary files from the builder stage
-# This creates a smaller final image
+# This creates a smaller final image without build dependencies
 COPY --from=builder /app ./
 
 # The command to run your application when the container starts
