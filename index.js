@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
 // Assuming you have this utility function in ./utils/glassEmbedBuilder.js
-const { createGlassEmbed } = require('./utils/glassEmbedBuilder');
+const { createGlassEmbed } = require('./utils/glassEmbedBuilder'); 
 const { handleInteraction } = require('./handlers/interactionHandler');
 require('dotenv').config();
 
@@ -124,7 +124,7 @@ client.on('guildMemberAdd', member => {
     const welcomeEmbed = createGlassEmbed({
         title: `👋 Welcome to the server, ${member.user.username}!`,
         description: `We're happy to have you here! Feel free to say hello in the chat and check out the rules.`,
-        color: '#00BFFF',
+        theme: 'default',
         client: client,
         thumbnail: member.user.displayAvatarURL({ dynamic: true }),
         footerText: `Member #${member.guild.memberCount}`
@@ -144,7 +144,7 @@ client.on('guildMemberRemove', member => {
     const goodbyeEmbed = createGlassEmbed({
         title: `🚪 Goodbye, ${member.user.username}`,
         description: `We're sad to see you go! We hope to see you again soon.`,
-        color: '#FF4500',
+        theme: 'warning',
         client: client,
         thumbnail: member.user.displayAvatarURL({ dynamic: true }),
         footerText: `Total members: ${member.guild.memberCount}`
@@ -172,21 +172,7 @@ const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'
 for (const file of eventFiles) {
     const event = require(`./events/${file}`);
     if (event.once) {
-        // We added the status presence code here, inside the 'ready' event.
-        // It runs once when the bot successfully logs in.
-        client.once(event.name, (...args) => {
-            if (event.name === 'ready') {
-                console.log(`Bot is ready and logged in as ${client.user.tag}!`);
-                client.user.setPresence({
-                    activities: [{
-                        name: 'music commands',
-                        type: ActivityType.Listening
-                    }],
-                    status: 'online'
-                });
-            }
-            event.execute(...args, client);
-        });
+        client.once(event.name, (...args) => event.execute(...args, client));
     } else {
         client.on(event.name, (...args) => event.execute(...args, client));
     }
