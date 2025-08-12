@@ -104,6 +104,44 @@ client.distube
         console.log(`[DEBUG] ${text}`);
     });
 
+// --- Welcome and Goodbye Messages ---
+// Listen for a new member joining the server.
+client.on('guildMemberAdd', member => {
+    // This finds a channel named 'welcome' or 'general' to send the message to.
+    // You can change 'welcome' to the name of your desired channel.
+    const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕welcome');
+    if (!channel) return;
+
+    const welcomeEmbed = createGlassEmbed({
+        title: '👋 Welcome!',
+        description: `Please welcome our newest member, **${member.user.tag}**, to the server!`,
+        color: '#00BFFF',
+        client: client,
+        footerText: `Total members: ${member.guild.memberCount}`
+    });
+
+    channel.send({ embeds: [welcomeEmbed] });
+});
+
+// Listen for a member leaving the server.
+client.on('guildMemberRemove', member => {
+    // This finds a channel named 'welcome' or 'general' to send the message to.
+    // You can change 'general' to the name of your desired channel.
+    const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕goodbye');
+    if (!channel) return;
+
+    const goodbyeEmbed = createGlassEmbed({
+        title: '🚪 Goodbye',
+        description: `**${member.user.tag}** has left the server. We'll miss you!`,
+        color: '#FF4500',
+        client: client,
+        footerText: `Total members: ${member.guild.memberCount}`
+    });
+
+    channel.send({ embeds: [goodbyeEmbed] });
+});
+
+
 // Command Collection
 client.commands = new Collection();
 
