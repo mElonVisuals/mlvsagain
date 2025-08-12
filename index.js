@@ -38,9 +38,9 @@ client.distube = new DisTube(client, {
     // in the container's system PATH, where our Dockerfile installs it.
     ffmpeg: 'ffmpeg',
     
-    emitNewSongOnly: false,
-    emitAddSongWhenCreatingQueue: false,
-    emitAddListWhenCreatingQueue: false,
+    emitNewSongOnly: true,
+    emitAddSongWhenCreatingQueue: true,
+    emitAddListWhenCreatingQueue: true,
     // Add plugins for other music sources like Spotify and SoundCloud.
     plugins: [
         new SoundCloudPlugin(),
@@ -101,6 +101,15 @@ client.distube
     // It will log detailed information about what DisTube is doing behind the scenes.
     .on('debug', (text) => {
         console.log(`[DEBUG] ${text}`);
+    });
+
+    client.distube
+    .on('finish', queue => {
+        // This event fires when the queue is empty and the bot has finished the last song.
+        // It's a good practice to send a message and leave the voice channel gracefully.
+        queue.textChannel.send('Queue finished! The bot is leaving the voice channel.');
+        // DisTube will automatically leave the voice channel when the queue is finished.
+        // No need to explicitly call stop or leave.
     });
 
 // --- Welcome and Goodbye Messages ---
