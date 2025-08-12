@@ -8,16 +8,10 @@ const { handleInteraction } = require('./handlers/interactionHandler');
 require('dotenv').config();
 
 // --- Music Library Imports ---
-// We need to import the core DisTube class and the plugins you'll use.
 const { DisTube } = require('distube');
 const { SoundCloudPlugin } = require('@distube/soundcloud');
 const { SpotifyPlugin } = require('@distube/spotify');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
-
-// We are no longer using ffmpeg-static or yt-dlp-exec.
-// The Dockerfile now installs these directly on the system path.
-// const ffmpegPath = require('ffmpeg-static');
-// const ytdl_bin = require('yt-dlp-exec').executablePath;
 
 // Initialize Discord Client
 const client = new Client({
@@ -31,29 +25,19 @@ const client = new Client({
 });
 
 // --- Music Library Initialization (DisTube) ---
-// This is the crucial part. It creates the DisTube client and attaches it
-// to your main bot client, so it can be accessed from any command file.
 client.distube = new DisTube(client, {
-    // We now use the simple string 'ffmpeg' to tell DisTube to find the executable
-    // in the container's system PATH, where our Dockerfile installs it.
     ffmpeg: 'ffmpeg',
-    
     emitNewSongOnly: true,
     emitAddSongWhenCreatingQueue: true,
     emitAddListWhenCreatingQueue: true,
-    // Add plugins for other music sources like Spotify and SoundCloud.
     plugins: [
         new SoundCloudPlugin(),
         new SpotifyPlugin(),
-        // We no longer need to specify an executable path for YtDlpPlugin.
-        // It will now find the system-installed yt-dlp.
         new YtDlpPlugin(),
     ],
 });
 
 // --- DisTube Event Listeners ---
-// These listeners provide real-time feedback for music playback.
-// They use your existing 'createGlassEmbed' utility for a consistent look.
 client.distube
     .on('playSong', (queue, song) => {
         const nowPlayingEmbed = createGlassEmbed({
@@ -83,8 +67,9 @@ client.distube
         queue.textChannel.send({ embeds: [addSongEmbed] });
     })
     .on('error', (channel, e) => {
-        // This listener is useful for debugging and catching unexpected errors.
-        if (channel) {
+        // This is the fix for the `channel.send` error.
+        // We now check if the channel exists AND is a valid text channel.
+        if (channel && channel.isTextBased()) {
             const errorEmbed = createGlassEmbed({
                 title: '⚠️ Music Playback Error',
                 description: `\`\`\`diff\n- An error occurred: ${e.toString().slice(0, 500)}\n\`\`\``,
@@ -97,30 +82,20 @@ client.distube
             console.error('DisTube Error:', e);
         }
     })
-    // Add a new debug listener to help pinpoint the issue.
-    // It will log detailed information about what DisTube is doing behind the scenes.
     .on('debug', (text) => {
         console.log(`[DEBUG] ${text}`);
     });
 
     client.distube
     .on('finish', queue => {
-        // This event fires when the queue is empty and the bot has finished the last song.
-        // It's a good practice to send a message and leave the voice channel gracefully.
         queue.textChannel.send('Queue finished! The bot is leaving the voice channel.');
-        // DisTube will automatically leave the voice channel when the queue is finished.
-        // No need to explicitly call stop or leave.
     });
 
 // --- Welcome and Goodbye Messages ---
-// Listen for a new member joining the server.
 client.on('guildMemberAdd', member => {
-    // This finds a channel named 'welcome' or 'general' to send the message to.
-    // You can change 'welcome' to the name of your desired channel.
     const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕welcome');
     if (!channel) return;
 
-    // A more personalized welcome embed
     const welcomeEmbed = createGlassEmbed({
         title: `👋 Welcome to the server, ${member.user.username}!`,
         description: `We're happy to have you here! Feel free to say hello in the chat and check out the rules.`,
@@ -133,14 +108,10 @@ client.on('guildMemberAdd', member => {
     channel.send({ embeds: [welcomeEmbed] });
 });
 
-// Listen for a member leaving the server.
 client.on('guildMemberRemove', member => {
-    // This finds a channel named 'welcome' or 'general' to send the message to.
-    // You can change 'general' to the name of your desired channel.
     const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕goodbye');
     if (!channel) return;
 
-    // A more heartfelt goodbye embed
     const goodbyeEmbed = createGlassEmbed({
         title: `🚪 Goodbye, ${member.user.username}`,
         description: `We're sad to see you go! We hope to see you again soon.`,
