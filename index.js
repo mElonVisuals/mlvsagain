@@ -1,0 +1,139 @@
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+const config = require('./config.json');
+// Assuming you have this utility function in ./utils/glassEmbedBuilder.js
+const { createGlassEmbed } = require('./utils/glassEmbedBuilder'); 
+const { handleInteraction } = require('./handlers/interactionHandler');
+require('dotenv').config();
+
+// --- Music Library Imports ---
+// We need to import the core Distube class and the plugins you'll use.
+const { DisTube } = require('distube');
+const { SoundCloudPlugin } = require('@distube/soundcloud');
+const { SpotifyPlugin } = require('@distube/spotify');
+const { YtDlpPlugin } = require('@distube/yt-dlp');
+
+// We need to import the path to the ffmpeg executable provided by ffmpeg-static.
+const ffmpegPath = require('ffmpeg-static');
+
+// We now import the correct yt-dlp executable path from the new package.
+// This is a more reliable method than relying on a system-wide installation.
+const ytdl_bin = require('yt-dlp-exec').executablePath;
+
+// Initialize Discord Client
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates
+    ]
+});
+
+// --- Music Library Initialization (DisTube) ---
+// This is the crucial part. It creates the DisTube client and attaches it
+// to your main bot client, so it can be accessed from any command file.
+client.distube = new DisTube(client, {
+    // We've added the ffmpeg path here to ensure DisTube can find the executable
+    // on your system, regardless of your PATH environment variable.
+    ffmpeg: ffmpegPath,
+    
+    emitNewSongOnly: false,
+    emitAddSongWhenCreatingQueue: false,
+    emitAddListWhenCreatingQueue: false,
+    // Add plugins for other music sources like Spotify and SoundCloud.
+    plugins: [
+        new SoundCloudPlugin(),
+        new SpotifyPlugin(),
+        // We configure YtDlpPlugin to use the locally installed `ytdl_bin` executable path.
+        new YtDlpPlugin({ executable: ytdl_bin }),
+    ],
+});
+
+// --- DisTube Event Listeners ---
+// These listeners provide real-time feedback for music playback.
+// They use your existing 'createGlassEmbed' utility for a consistent look.
+client.distube
+    .on('playSong', (queue, song) => {
+        const nowPlayingEmbed = createGlassEmbed({
+            title: '🎵 Now Playing',
+            description: `**[${song.name}](${song.url})**`,
+            color: '#00FF87',
+            thumbnail: song.thumbnail,
+            client: client,
+            footerText: `Playing in ${queue.voiceChannel.name}`
+        });
+
+        nowPlayingEmbed.addFields(
+            { name: 'Requested by', value: `${song.user}`, inline: true },
+            { name: 'Duration', value: song.formattedDuration, inline: true }
+        );
+
+        queue.textChannel.send({ embeds: [nowPlayingEmbed] });
+    })
+    .on('addSong', (queue, song) => {
+        const addSongEmbed = createGlassEmbed({
+            title: '🎶 Added to Queue',
+            description: `**[${song.name}](${song.url})** has been added to the queue!`,
+            color: '#7289DA',
+            client: client,
+            footerText: `Current queue size: ${queue.songs.length}`
+        });
+        queue.textChannel.send({ embeds: [addSongEmbed] });
+    })
+    .on('error', (channel, e) => {
+        // This listener is useful for debugging and catching unexpected errors.
+        if (channel) {
+            const errorEmbed = createGlassEmbed({
+                title: '⚠️ Music Playback Error',
+                description: `\`\`\`diff\n- An error occurred: ${e.toString().slice(0, 500)}\n\`\`\``,
+                color: '#FF6B6B',
+                client: client,
+                footerText: 'DisTube Error'
+            });
+            channel.send({ embeds: [errorEmbed] });
+        } else {
+            console.error('DisTube Error:', e);
+        }
+    })
+    // Add a new debug listener to help pinpoint the issue.
+    // It will log detailed information about what DisTube is doing behind the scenes.
+    .on('debug', (text) => {
+        console.log(`[DEBUG] ${text}`);
+    });
+
+// Command Collection
+client.commands = new Collection();
+
+// Load Commands
+const commandFolders = fs.readdirSync('./commands');
+for (const folder of commandFolders) {
+    const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const command = require(`./commands/${folder}/${file}`);
+        client.commands.set(command.name, command);
+    }
+}
+
+// Load Events
+const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
+    const event = require(`./events/${file}`);
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args, client));
+    }
+}
+
+// Global Error Handling
+process.on('unhandledRejection', error => {
+    console.error('Unhandled promise rejection:', error);
+});
+
+// Login Bot
+client.login(process.env.DISCORD_TOKEN);
+
+module.exports = client;
