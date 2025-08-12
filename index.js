@@ -148,5 +148,5 @@ client.on('messageCreate', async message => {
 });
 
 // --- Login to Discord and start the Express server ---
-client.login(config.token);
+client.login(process.env.DISCORD_TOKEN);
 app.listen(PORT);
