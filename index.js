@@ -112,12 +112,14 @@ client.on('guildMemberAdd', member => {
     const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕welcome');
     if (!channel) return;
 
+    // A more personalized welcome embed
     const welcomeEmbed = createGlassEmbed({
-        title: '👋 Welcome!',
-        description: `Please welcome our newest member, **${member.user.tag}**, to the server!`,
+        title: `👋 Welcome to the server, ${member.user.username}!`,
+        description: `We're happy to have you here! Feel free to say hello in the chat and check out the rules.`,
         color: '#00BFFF',
         client: client,
-        footerText: `Total members: ${member.guild.memberCount}`
+        thumbnail: member.user.displayAvatarURL({ dynamic: true }),
+        footerText: `Member #${member.guild.memberCount}`
     });
 
     channel.send({ embeds: [welcomeEmbed] });
@@ -130,11 +132,13 @@ client.on('guildMemberRemove', member => {
     const channel = member.guild.channels.cache.find(ch => ch.name === '・﹕goodbye');
     if (!channel) return;
 
+    // A more heartfelt goodbye embed
     const goodbyeEmbed = createGlassEmbed({
-        title: '🚪 Goodbye',
-        description: `**${member.user.tag}** has left the server. We'll miss you!`,
+        title: `🚪 Goodbye, ${member.user.username}`,
+        description: `We're sad to see you go! We hope to see you again soon.`,
         color: '#FF4500',
         client: client,
+        thumbnail: member.user.displayAvatarURL({ dynamic: true }),
         footerText: `Total members: ${member.guild.memberCount}`
     });
 
