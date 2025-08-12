@@ -67,9 +67,9 @@ client.distube
         queue.textChannel.send({ embeds: [addSongEmbed] });
     })
     .on('error', (channel, e) => {
-        // This is the fix for the `channel.send` error.
-        // We now check if the channel exists AND is a valid text channel.
-        if (channel && channel.isTextBased()) {
+        // This is the updated fix for the `channel.isTextBased` error.
+        // We now check if the channel has a 'send' function before trying to use it.
+        if (channel && typeof channel.send === 'function') {
             const errorEmbed = createGlassEmbed({
                 title: '⚠️ Music Playback Error',
                 description: `\`\`\`diff\n- An error occurred: ${e.toString().slice(0, 500)}\n\`\`\``,
