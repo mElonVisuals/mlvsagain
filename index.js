@@ -45,10 +45,10 @@ for (const folder of commandFolders) {
 // --- Shared Bot Data Object ---
 // This object will be the bridge between the bot and the dashboard
 let botData = {
-    name: client.user?.username || 'DisTubeBot',
-    avatarUrl: client.user?.displayAvatarURL() || 'https://placehold.co/128x128/000000/FFFFFF?text=BOT',
-    guilds: client.guilds.cache.size,
-    users: client.users.cache.size,
+    name: 'DisTubeBot',
+    avatarUrl: 'https://placehold.co/128x128/000000/FFFFFF?text=BOT',
+    guilds: 0,
+    users: 0,
     uptime: '0s',
     currentSong: null,
     queue: []
@@ -115,19 +115,18 @@ client.distube.on('playSong', (queue, song) => {
 
 // --- Discord Bot Event Listeners ---
 client.on('ready', () => {
-    // This is the crucial part. We now start the Express server *after* the bot is ready.
+    // We update the botData object with real values once the bot is logged in.
+    botData.name = client.user.username;
+    botData.avatarUrl = client.user.displayAvatarURL();
+    botData.guilds = client.guilds.cache.size;
+    botData.users = client.users.cache.size;
+
+    // We now start the Express server *after* the bot is ready.
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Dashboard server listening on http://0.0.0.0:${PORT}`);
     });
-    console.log(`Logged in as ${client.user.tag}!`);
-    // We can't know the full external IP, so we log the host and port
-    console.log(`Dashboard server listening on http://0.0.0.0:${PORT}`);
 
-    // Update initial botData after login
-    botData.name = client.user.username;
-    botData.avatarUrl = client.user.displayAvatarURL();
-    botData.guilds = client.guilds.cache.size;
-    botData.users = client.users.cache.size;
+    console.log(`Logged in as ${client.user.tag}!`);
 });
 
 client.on('messageCreate', async message => {
@@ -152,5 +151,5 @@ client.on('messageCreate', async message => {
     }
 });
 
-// --- Login to Discord and start the Express server ---
+// --- Login to Discord ---
 client.login(process.env.DISCORD_TOKEN);
