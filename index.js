@@ -62,8 +62,8 @@ app.set('views', path.join(__dirname, 'views'));
 // Serve static files from the 'public' directory (for CSS, JS, images, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Update botData with live stats every 60 seconds
-setInterval(() => {
+// Function to update the bot stats
+function updateBotStats() {
     botData.guilds = client.guilds.cache.size;
     botData.users = client.users.cache.size;
     
@@ -74,10 +74,14 @@ setInterval(() => {
     const minutes = Math.floor((uptimeInSeconds % 3600) / 60);
     const seconds = uptimeInSeconds % 60;
     botData.uptime = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-}, 60000);
+}
+
+// Update botData with live stats every 60 seconds
+setInterval(updateBotStats, 60000);
 
 // Route for the main dashboard page
 app.get('/', (req, res) => {
+    // The 'bot' variable in your dashboard.ejs file will receive this botData object.
     res.render('dashboard', { bot: botData });
 });
 
@@ -118,8 +122,9 @@ client.on('ready', () => {
     // We update the botData object with real values once the bot is logged in.
     botData.name = client.user.username;
     botData.avatarUrl = client.user.displayAvatarURL();
-    botData.guilds = client.guilds.cache.size;
-    botData.users = client.users.cache.size;
+    
+    // Call the stats update function immediately when the bot is ready
+    updateBotStats();
 
     // We now start the Express server *after* the bot is ready.
     app.listen(PORT, '0.0.0.0', () => {
