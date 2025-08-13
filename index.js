@@ -115,6 +115,10 @@ client.distube.on('playSong', (queue, song) => {
 
 // --- Discord Bot Event Listeners ---
 client.on('ready', () => {
+    // This is the crucial part. We now start the Express server *after* the bot is ready.
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Dashboard server listening on http://0.0.0.0:${PORT}`);
+    });
     console.log(`Logged in as ${client.user.tag}!`);
     // We can't know the full external IP, so we log the host and port
     console.log(`Dashboard server listening on http://0.0.0.0:${PORT}`);
@@ -150,9 +154,3 @@ client.on('messageCreate', async message => {
 
 // --- Login to Discord and start the Express server ---
 client.login(process.env.DISCORD_TOKEN);
-
-// This is the crucial line to change to make your app accessible
-app.listen(PORT, '0.0.0.0', () => {
-    // We also update the log message to reflect the change
-    console.log(`Dashboard server listening on http://0.0.0.0:${PORT}`);
-});
