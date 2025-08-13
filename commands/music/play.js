@@ -2,8 +2,6 @@
 
 // Import necessary classes from discord.js and the voice package
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-// We are no longer using the createButton utility function to avoid potential emoji issues.
-// Instead, we will build all buttons directly using ButtonBuilder for consistency and reliability.
 const { createGlassEmbed } = require('../../utils/glassEmbedBuilder');
 const config = require('../../config.json');
 
@@ -104,34 +102,45 @@ module.exports = {
                 member: message.member,
             });
 
-            await loadingMsg.delete();
+            // If the play command is successful, the loading message will be deleted by the DisTube 'playSong' event.
+            // We'll add a check here just in case.
+            if (loadingMsg) {
+                await loadingMsg.delete().catch(err => console.error('Failed to delete loading message:', err));
+            }
         } catch (error) {
             console.error('Error playing music with DisTube:', error);
 
+            let errorEmbed;
             // Now, we specifically check for the NOT_SUPPORTED_URL error.
             if (error instanceof DisTubeError && error.errorCode === 'NOT_SUPPORTED_URL') {
-                const notSupportedEmbed = createGlassEmbed({
+                errorEmbed = createGlassEmbed({
                     title: '⚠️ Music Playback Error',
                     description: '```diff\n- The provided URL or search query is not supported.\nPlease try a different link or search term.\n```',
                     color: '#FF6B6B',
                     client: client,
                     footerText: 'DisTube Error'
                 });
-                await loadingMsg.edit({ embeds: [notSupportedEmbed] }).catch(err => {
-                    message.channel.send({ embeds: [notSupportedEmbed] });
-                });
             } else {
                 // This handles all other potential errors.
-                const unknownErrorEmbed = createGlassEmbed({
+                errorEmbed = createGlassEmbed({
                     title: '⚠️ Music Playback Error',
                     description: '```diff\n- An unexpected error occurred while trying to play the music.\n```',
                     color: '#FF6B6B',
                     client: client,
-                    footerText: 'DisTube Error'
+                    footerText: `DisTube Error: ${error.message}`
                 });
-                await loadingMsg.edit({ embeds: [unknownErrorEmbed] }).catch(err => {
-                    message.channel.send({ embeds: [unknownErrorEmbed] });
+            }
+
+            // Edit the loading message with the error embed
+            if (loadingMsg) {
+                await loadingMsg.edit({ embeds: [errorEmbed] }).catch(err => {
+                    console.error('Failed to edit loading message with error:', err);
+                    // As a fallback, send the error embed as a new message if editing fails
+                    message.channel.send({ embeds: [errorEmbed] });
                 });
+            } else {
+                // If the loading message was never sent, just send a new message with the error
+                message.channel.send({ embeds: [errorEmbed] });
             }
         }
     }
