@@ -12,7 +12,7 @@ const path = require('path');
 // --- Express and EJS Dashboard Imports ---
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Create a new client instance
 const client = new Client({
